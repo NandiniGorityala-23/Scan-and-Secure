@@ -1,0 +1,15 @@
+{
+  "name": "omniwarranty",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n server,admin,customer -c blue,green,magenta \"npm run dev --prefix server\" \"npm run dev --prefix admin\" \"npm run dev --prefix customer\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:admin": "npm run dev --prefix admin",
+    "dev:customer": "npm run dev --prefix customer",
+    "install:all": "npm i --prefix server && npm i --prefix admin && npm i --prefix customer"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
