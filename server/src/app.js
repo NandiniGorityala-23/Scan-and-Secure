@@ -10,6 +10,7 @@ import qrcodeRoutes from './routes/qrcode.routes.js';
 import claimRoutes from './routes/claim.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import errorHandler from './middleware/error.middleware.js';
+import requestContext from './middleware/requestContext.middleware.js';
 import { startExpiryNotifier } from './jobs/expiryNotifier.job.js';
 import { getEnv, validateEnv } from './config/env.js';
 
@@ -27,12 +28,14 @@ app.use(
   })
 );
 app.use(express.json({ limit: '1mb' }));
+app.use(requestContext);
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'omniwarranty-server',
     startedAt,
+    requestId: req.requestId,
   });
 });
 

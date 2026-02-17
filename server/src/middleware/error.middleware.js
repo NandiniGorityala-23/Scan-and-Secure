@@ -27,7 +27,10 @@ const errorHandler = (err, req, res, next) => {
     status = 401;
   }
 
-  res.status(status).json({ message });
+  res.status(status).json({
+    message,
+    requestId: req.requestId,
+  });
 };
 
 export default errorHandler;
