@@ -51,6 +51,7 @@ export default function Register() {
             <Input
               label="Full name"
               name="name"
+              autoComplete="name"
               placeholder="Jane Smith"
               value={form.name}
               onChange={handle}
@@ -60,6 +61,8 @@ export default function Register() {
               label="Email"
               name="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
               placeholder="admin@company.com"
               value={form.email}
               onChange={handle}
@@ -69,6 +72,7 @@ export default function Register() {
               label="Password"
               name="password"
               type="password"
+              autoComplete="new-password"
               placeholder="Min. 6 characters"
               value={form.password}
               onChange={handle}

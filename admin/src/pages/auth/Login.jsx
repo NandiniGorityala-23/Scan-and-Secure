@@ -53,6 +53,8 @@ export default function Login() {
               label="Email"
               name="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
               placeholder="admin@company.com"
               value={form.email}
               onChange={handle}
@@ -62,7 +64,8 @@ export default function Login() {
               label="Password"
               name="password"
               type="password"
-              placeholder="••••••••"
+              autoComplete="current-password"
+              placeholder="********"
               value={form.password}
               onChange={handle}
               required
