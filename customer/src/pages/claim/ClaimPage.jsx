@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/auth.store';
+import { API_BASE_URL } from '../../lib/config';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api';
+const API_URL = API_BASE_URL;
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });

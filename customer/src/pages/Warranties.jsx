@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ShieldCheck, Download, AlertTriangle, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { API_BASE_URL } from '../lib/config';
 
 function daysLeft(d) {
   return Math.ceil((new Date(d) - new Date()) / (1000 * 60 * 60 * 24));
@@ -48,7 +49,7 @@ export default function Warranties() {
 
   const handleDownload = (uuid) => {
     const token = localStorage.getItem('ow_customer_token');
-    const url = `${import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api'}/claim/${uuid}/certificate`;
+    const url = `${API_BASE_URL}/claim/${uuid}/certificate`;
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.blob())
       .then((blob) => {
