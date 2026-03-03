@@ -20,11 +20,14 @@ export default function Button({
   disabled,
   loading,
   children,
+  type = 'button',
   ...props
 }) {
   return (
     <button
+      type={type}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
         'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
@@ -36,7 +39,10 @@ export default function Button({
       {...props}
     >
       {loading && (
-        <span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <span
+          aria-hidden="true"
+          className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+        />
       )}
       {children}
     </button>

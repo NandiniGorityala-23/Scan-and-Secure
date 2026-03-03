@@ -13,7 +13,7 @@ export default function Badge({ variant = 'slate', className, children }) {
     <span
       className={cn(
         'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset',
-        variants[variant],
+        variants[variant] || variants.slate,
         className
       )}
     >
