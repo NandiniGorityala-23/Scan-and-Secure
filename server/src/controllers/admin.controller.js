@@ -2,10 +2,11 @@ import Product from '../models/Product.model.js';
 import QRCode from '../models/QRCode.model.js';
 import Batch from '../models/Batch.model.js';
 import { sendPendingExpiryReminders } from '../jobs/expiryNotifier.job.js';
+import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
 
 export const getClaims = async (req, res, next) => {
   try {
-    const { page = 1, limit = 15, status } = req.query;
+    const { status } = req.query;
     const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id');
     const productIds = adminProducts.map((p) => p._id);
 
@@ -23,15 +24,13 @@ export const getClaims = async (req, res, next) => {
       filter.expiresAt = { $lt: now };
     }
 
-    const safePage = Math.max(Number(page) || 1, 1);
-    const safeLimit = Math.min(Math.max(Number(limit) || 15, 1), 100);
-    const skip = (safePage - 1) * safeLimit;
+    const pagination = parsePagination(req.query, { defaultLimit: 15, maxLimit: 100 });
 
     const [rawClaims, total] = await Promise.all([
       QRCode.find(filter)
         .sort({ claimedAt: -1 })
-        .skip(skip)
-        .limit(safeLimit)
+        .skip(pagination.skip)
+        .limit(pagination.limit)
         .populate('product', 'name modelNumber category warrantyDurationMonths')
         .populate('claimedBy', 'name email'),
       QRCode.countDocuments(filter),
@@ -50,9 +49,7 @@ export const getClaims = async (req, res, next) => {
 
     res.json({
       claims,
-      total,
-      page: safePage,
-      pages: Math.ceil(total / safeLimit),
+      ...buildPaginationMeta({ total, ...pagination }),
     });
   } catch (err) {
     next(err);

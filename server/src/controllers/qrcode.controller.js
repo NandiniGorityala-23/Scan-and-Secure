@@ -5,6 +5,7 @@ import QRCodeModel from '../models/QRCode.model.js';
 import Batch from '../models/Batch.model.js';
 import { generateBatch } from '../services/qr.service.js';
 import { buildQRPdf } from '../services/pdf.service.js';
+import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
 
 export const generate = async (req, res, next) => {
   try {
@@ -68,9 +69,7 @@ export const getStats = async (req, res, next) => {
 
 export const getBatches = async (req, res, next) => {
   try {
-    const page = Math.max(Number(req.query.page) || 1, 1);
-    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
-    const skip = (page - 1) * limit;
+    const pagination = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
     const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id');
     const productIds = adminProducts.map((p) => p._id);
     const filter = { product: { $in: productIds } };
@@ -79,16 +78,14 @@ export const getBatches = async (req, res, next) => {
       Batch.find(filter)
         .populate('product', 'name modelNumber category images')
         .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
+        .skip(pagination.skip)
+        .limit(pagination.limit),
       Batch.countDocuments(filter),
     ]);
 
     res.json({
       batches,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
+      ...buildPaginationMeta({ total, ...pagination }),
     });
   } catch (err) {
     next(err);

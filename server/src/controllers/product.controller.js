@@ -2,10 +2,11 @@ import { Readable } from 'stream';
 import csvParser from 'csv-parser';
 import cloudinary from '../config/cloudinary.js';
 import Product from '../models/Product.model.js';
+import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
 
 export const getProducts = async (req, res, next) => {
   try {
-    const { search, category, page = 1, limit = 10 } = req.query;
+    const { search, category } = req.query;
 
     const filter = { manufacturer: req.user._id };
 
@@ -20,18 +21,19 @@ export const getProducts = async (req, res, next) => {
       filter.category = { $regex: category, $options: 'i' };
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const pagination = parsePagination(req.query, { defaultLimit: 10, maxLimit: 100 });
 
     const [products, total] = await Promise.all([
-      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+      Product.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(pagination.skip)
+        .limit(pagination.limit),
       Product.countDocuments(filter),
     ]);
 
     res.json({
       products,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+      ...buildPaginationMeta({ total, ...pagination }),
     });
   } catch (err) {
     next(err);
