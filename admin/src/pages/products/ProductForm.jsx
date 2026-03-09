@@ -3,9 +3,9 @@ import { ImagePlus, X } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import { API_BASE_URL } from '../../lib/config';
 
 const CATEGORIES = ['Electronics', 'Appliances', 'Furniture', 'Automotive', 'Tools', 'Other'];
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5001/api';
 const MAX_IMAGES = 5;
 
 const empty = {
@@ -53,7 +53,7 @@ export default function ProductForm({ initial, onSubmit, loading, submitLabel = 
         toUpload.map((file) => {
           const fd = new FormData();
           fd.append('image', file);
-          return fetch(`${API_URL}/products/upload-image`, {
+          return fetch(`${API_BASE_URL}/products/upload-image`, {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
             body: fd,
