@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ImagePlus, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -7,6 +8,8 @@ import { API_BASE_URL } from '../../lib/config';
 
 const CATEGORIES = ['Electronics', 'Appliances', 'Furniture', 'Automotive', 'Tools', 'Other'];
 const MAX_IMAGES = 5;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 const empty = {
   name: '',
@@ -44,7 +47,25 @@ export default function ProductForm({ initial, onSubmit, loading, submitLabel = 
     if (!files.length) return;
 
     const remaining = MAX_IMAGES - form.images.length;
+    if (remaining <= 0) {
+      toast.error(`You can add up to ${MAX_IMAGES} product images`);
+      e.target.value = '';
+      return;
+    }
+
+    const invalid = files.find(
+      (file) => !ACCEPTED_IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES
+    );
+    if (invalid) {
+      toast.error('Upload JPG, PNG, or WebP images up to 5 MB');
+      e.target.value = '';
+      return;
+    }
+
     const toUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.error(`Only ${remaining} more image${remaining === 1 ? '' : 's'} can be added`);
+    }
 
     setUploading(true);
     try {
@@ -58,11 +79,16 @@ export default function ProductForm({ initial, onSubmit, loading, submitLabel = 
             headers: { Authorization: `Bearer ${token}` },
             body: fd,
           })
-            .then((r) => r.json())
+            .then((r) => {
+              if (!r.ok) throw new Error('Image upload failed');
+              return r.json();
+            })
             .then((d) => d.url);
         })
       );
       setForm((f) => ({ ...f, images: [...f.images, ...urls.filter(Boolean)] }));
+    } catch (err) {
+      toast.error(err.message || 'Image upload failed');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -138,6 +164,7 @@ export default function ProductForm({ initial, onSubmit, loading, submitLabel = 
             ({form.images.length}/{MAX_IMAGES})
           </span>
         </label>
+        <p className="mt-1 text-xs text-slate-400">JPG, PNG, or WebP up to 5 MB each</p>
 
         <div className="mt-2 flex flex-wrap gap-3">
           {form.images.map((url, idx) => (
@@ -175,7 +202,7 @@ export default function ProductForm({ initial, onSubmit, loading, submitLabel = 
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/png,image/jpeg,image/webp"
                 multiple
                 className="hidden"
                 onChange={handleImageFiles}
