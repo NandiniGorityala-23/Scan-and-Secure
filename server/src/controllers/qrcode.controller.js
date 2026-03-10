@@ -6,6 +6,7 @@ import Batch from '../models/Batch.model.js';
 import { generateBatch } from '../services/qr.service.js';
 import { buildQRPdf } from '../services/pdf.service.js';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
+import { buildCsv } from '../utils/csv.js';
 
 export const generate = async (req, res, next) => {
   try {
@@ -36,15 +37,15 @@ export const generate = async (req, res, next) => {
     const codes = await generateBatch(productId, Number(quantity), batch._id);
 
     // Stream CSV directly as the response so it auto-downloads in the browser
-    const header = 'uuid,claim_url,product_name,batch_name,status\n';
-    const rows = codes
-      .map((c) => `${c.uuid},${c.claimUrl},"${product.name}","${batch.name}",${c.status}`)
-      .join('\n');
+    const csv = buildCsv(
+      ['uuid', 'claim_url', 'product_name', 'batch_name', 'status'],
+      codes.map((c) => [c.uuid, c.claimUrl, product.name, batch.name, c.status])
+    );
 
     const filename = `batch-${batch.name.replace(/\s+/g, '-')}-${Date.now()}.csv`;
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(header + rows);
+    res.send(csv);
   } catch (err) {
     next(err);
   }
@@ -104,15 +105,15 @@ export const exportBatchCSV = async (req, res, next) => {
 
     const codes = await QRCodeModel.find({ batch: batchId });
 
-    const header = 'uuid,claim_url,product_name,batch_name,status\n';
-    const rows = codes
-      .map((c) => `${c.uuid},${c.claimUrl},"${product.name}","${batch.name}",${c.status}`)
-      .join('\n');
+    const csv = buildCsv(
+      ['uuid', 'claim_url', 'product_name', 'batch_name', 'status'],
+      codes.map((c) => [c.uuid, c.claimUrl, product.name, batch.name, c.status])
+    );
 
     const filename = `batch-${batch.name.replace(/\s+/g, '-')}.csv`;
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(header + rows);
+    res.send(csv);
   } catch (err) {
     next(err);
   }
