@@ -5,6 +5,7 @@ import PageHeader from '../../components/layout/PageHeader';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/ui/EmptyState';
 import GenerateModal from './GenerateModal';
 import UploadCSVPanel from './UploadCSVPanel';
 import { useBatches, downloadBatchCSV } from '../../hooks/useQRCodes';
@@ -60,11 +61,11 @@ export default function QRCodes() {
                 <Spinner className="size-8" />
               </div>
             ) : batches.length === 0 ? (
-              <div className="text-center py-16 text-slate-400">
-                <Package size={32} className="mx-auto mb-3 text-slate-300" />
-                <p className="font-medium">No batches yet</p>
-                <p className="text-sm mt-1">Generate your first QR batch to get started</p>
-              </div>
+              <EmptyState
+                icon={Package}
+                title="No batches yet"
+                description="Generate your first QR batch to get started"
+              />
             ) : (
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-slate-100">

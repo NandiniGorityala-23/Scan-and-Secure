@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/ui/EmptyState';
 import ProductForm from './ProductForm';
 import ImportCSVModal from './ImportCSVModal';
 import {
@@ -84,10 +85,7 @@ export default function Products() {
             <Spinner className="size-8" />
           </div>
         ) : data?.products?.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            <p className="font-medium">No products yet</p>
-            <p className="text-sm mt-1">Add your first SKU to get started</p>
-          </div>
+          <EmptyState title="No products yet" description="Add your first SKU to get started" />
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">

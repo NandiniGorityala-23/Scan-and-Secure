@@ -5,6 +5,7 @@ import api from '../../lib/api';
 import PageHeader from '../../components/layout/PageHeader';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/ui/EmptyState';
 import { formatDate } from '../../lib/utils';
 
 function daysLeft(d) {
@@ -86,11 +87,11 @@ export default function Claims() {
             <Spinner className="size-8" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-slate-400">
-            <ShieldCheck size={32} className="mx-auto mb-3 text-slate-300" />
-            <p className="font-medium">No claims yet</p>
-            <p className="text-sm mt-1">Claims will appear here once customers scan and activate their QR codes</p>
-          </div>
+          <EmptyState
+            icon={ShieldCheck}
+            title="No claims yet"
+            description="Claims will appear here once customers scan and activate their QR codes"
+          />
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-100">
