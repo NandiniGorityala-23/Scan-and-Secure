@@ -20,7 +20,11 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', { ...form, role: 'customer' });
+      const { data } = await api.post('/auth/login', {
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        role: 'customer',
+      });
       setAuth(data.user, data.token);
       navigate(redirect);
     } catch (err) {
@@ -46,6 +50,8 @@ export default function Login() {
               label="Email"
               name="email"
               type="email"
+              autoComplete="email"
+              inputMode="email"
               placeholder="you@email.com"
               value={form.email}
               onChange={handle}
@@ -55,6 +61,7 @@ export default function Login() {
               label="Password"
               name="password"
               type="password"
+              autoComplete="current-password"
               placeholder="********"
               value={form.password}
               onChange={handle}

@@ -7,9 +7,23 @@ import useAuthStore from '../../store/auth.store';
 import AuthInput from '../../components/ui/AuthInput';
 
 const fields = [
-  { name: 'name', label: 'Name', type: 'text', placeholder: 'Your name' },
-  { name: 'email', label: 'Email', type: 'email', placeholder: 'you@email.com' },
-  { name: 'password', label: 'Password', type: 'password', placeholder: '********', minLength: 6 },
+  { name: 'name', label: 'Name', type: 'text', placeholder: 'Your name', autoComplete: 'name' },
+  {
+    name: 'email',
+    label: 'Email',
+    type: 'email',
+    placeholder: 'you@email.com',
+    autoComplete: 'email',
+    inputMode: 'email',
+  },
+  {
+    name: 'password',
+    label: 'Password',
+    type: 'password',
+    placeholder: '********',
+    autoComplete: 'new-password',
+    minLength: 6,
+  },
 ];
 
 export default function Register() {
@@ -26,7 +40,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { ...form, role: 'customer' });
+      const { data } = await api.post('/auth/register', {
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+        role: 'customer',
+      });
       setAuth(data.user, data.token);
       navigate(redirect);
     } catch (err) {
