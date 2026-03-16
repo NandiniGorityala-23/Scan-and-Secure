@@ -4,6 +4,13 @@ import { ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import useAuthStore from '../../store/auth.store';
+import AuthInput from '../../components/ui/AuthInput';
+
+const fields = [
+  { name: 'name', label: 'Name', type: 'text', placeholder: 'Your name' },
+  { name: 'email', label: 'Email', type: 'email', placeholder: 'you@email.com' },
+  { name: 'password', label: 'Password', type: 'password', placeholder: '********', minLength: 6 },
+];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -41,20 +48,14 @@ export default function Register() {
           <h1 className="text-xl font-bold text-slate-900 mb-1">Create account</h1>
           <p className="text-sm text-slate-500 mb-6">Register to manage your warranties</p>
           <form onSubmit={submit} className="space-y-4">
-            {['name', 'email', 'password'].map((field) => (
-              <div key={field} className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700 capitalize">{field}</label>
-                <input
-                  name={field}
-                  type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                  placeholder={field === 'name' ? 'Your name' : field === 'email' ? 'you@email.com' : '********'}
-                  value={form[field]}
-                  onChange={handle}
-                  minLength={field === 'password' ? 6 : undefined}
-                  required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+            {fields.map((field) => (
+              <AuthInput
+                key={field.name}
+                {...field}
+                value={form[field.name]}
+                onChange={handle}
+                required
+              />
             ))}
             <button
               type="submit"

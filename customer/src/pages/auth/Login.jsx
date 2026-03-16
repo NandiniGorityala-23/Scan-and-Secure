@@ -4,6 +4,7 @@ import { ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../lib/api';
 import useAuthStore from '../../store/auth.store';
+import AuthInput from '../../components/ui/AuthInput';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -41,30 +42,24 @@ export default function Login() {
           <h1 className="text-xl font-bold text-slate-900 mb-1">Sign in</h1>
           <p className="text-sm text-slate-500 mb-6">Access your warranty records</p>
           <form onSubmit={submit} className="space-y-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Email</label>
-              <input
-                name="email"
-                type="email"
-                placeholder="you@email.com"
-                value={form.email}
-                onChange={handle}
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Password</label>
-              <input
-                name="password"
-                type="password"
-                placeholder="********"
-                value={form.password}
-                onChange={handle}
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+            <AuthInput
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="you@email.com"
+              value={form.email}
+              onChange={handle}
+              required
+            />
+            <AuthInput
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="********"
+              value={form.password}
+              onChange={handle}
+              required
+            />
             <button
               type="submit"
               disabled={loading}
