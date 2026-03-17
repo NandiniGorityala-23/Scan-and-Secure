@@ -3,28 +3,21 @@ import { ShieldCheck, Download, AlertTriangle, Clock, CheckCircle, ArrowLeft } f
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { API_BASE_URL } from '../lib/config';
-
-function daysLeft(d) {
-  return Math.ceil((new Date(d) - new Date()) / (1000 * 60 * 60 * 24));
-}
-
-function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
+import { daysLeft, formatWarrantyDate, warrantyStatus } from '../lib/warranty';
 
 function StatusBadge({ expiresAt }) {
-  const days = daysLeft(expiresAt);
-  if (days < 0) {
+  const status = warrantyStatus(expiresAt);
+  if (status.tone === 'expired') {
     return (
       <span className="flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-500/10 px-2.5 py-1 rounded-full">
         <AlertTriangle size={11} /> Expired
       </span>
     );
   }
-  if (days <= 30) {
+  if (status.tone === 'expiring') {
     return (
       <span className="flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full">
-        <Clock size={11} /> Expires in {days}d
+        <Clock size={11} /> {status.label}
       </span>
     );
   }
@@ -118,12 +111,12 @@ export default function Warranties() {
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="bg-white/5 rounded-xl p-3">
                         <p className="text-slate-500 text-xs mb-0.5">Registered</p>
-                        <p className="text-white text-xs font-semibold">{formatDate(claimedAt)}</p>
+                        <p className="text-white text-xs font-semibold">{formatWarrantyDate(claimedAt)}</p>
                       </div>
                       <div className={`rounded-xl p-3 ${days < 0 ? 'bg-red-500/10' : days <= 30 ? 'bg-amber-500/10' : 'bg-emerald-500/10'}`}>
                         <p className="text-slate-500 text-xs mb-0.5">Expires</p>
                         <p className={`text-xs font-semibold ${days < 0 ? 'text-red-400' : days <= 30 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                          {formatDate(expiresAt)}
+                          {formatWarrantyDate(expiresAt)}
                         </p>
                       </div>
                     </div>

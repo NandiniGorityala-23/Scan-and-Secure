@@ -3,19 +3,12 @@ import { QrCode, ShieldCheck, LogOut, ScanLine, ChevronRight, Clock, CheckCircle
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/auth.store';
 import api from '../lib/api';
-
-function daysLeft(d) {
-  return Math.ceil((new Date(d) - new Date()) / (1000 * 60 * 60 * 24));
-}
-
-function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
+import { formatWarrantyDate, warrantyStatus } from '../lib/warranty';
 
 function MiniStatusBadge({ expiresAt }) {
-  const days = daysLeft(expiresAt);
-  if (days < 0) return <span className="text-xs text-red-400 font-semibold flex items-center gap-1"><AlertTriangle size={10} /> Expired</span>;
-  if (days <= 30) return <span className="text-xs text-amber-400 font-semibold flex items-center gap-1"><Clock size={10} /> {days}d left</span>;
+  const status = warrantyStatus(expiresAt);
+  if (status.tone === 'expired') return <span className="text-xs text-red-400 font-semibold flex items-center gap-1"><AlertTriangle size={10} /> Expired</span>;
+  if (status.tone === 'expiring') return <span className="text-xs text-amber-400 font-semibold flex items-center gap-1"><Clock size={10} /> {status.days}d left</span>;
   return <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1"><CheckCircle size={10} /> Active</span>;
 }
 
@@ -101,7 +94,7 @@ export default function Home() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold truncate">{w.product.name}</p>
-                    <p className="text-slate-500 text-xs">Expires {formatDate(w.expiresAt)}</p>
+                    <p className="text-slate-500 text-xs">Expires {formatWarrantyDate(w.expiresAt)}</p>
                   </div>
                   <MiniStatusBadge expiresAt={w.expiresAt} />
                 </div>
