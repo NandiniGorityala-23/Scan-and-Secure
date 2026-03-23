@@ -3,6 +3,7 @@ import QRCode from '../models/QRCode.model.js';
 import Batch from '../models/Batch.model.js';
 import { sendPendingExpiryReminders } from '../jobs/expiryNotifier.job.js';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
+import { maskCustomerName } from '../utils/warranty.js';
 
 export const getClaims = async (req, res, next) => {
   try {
@@ -148,21 +149,15 @@ export const getAnalytics = async (req, res, next) => {
       .populate('product', 'name modelNumber category')
       .populate('claimedBy', 'name email');
 
-    const recentClaimsData = recentClaims.map((c) => {
-      const name = c.claimedBy?.name || '';
-      const parts = name.trim().split(' ');
-      const maskedName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0];
-
-      return {
+    const recentClaimsData = recentClaims.map((c) => ({
         uuid: `${c.uuid.slice(0, 8)}...`,
         productName: c.product?.name,
         modelNumber: c.product?.modelNumber,
         category: c.product?.category,
-        customerName: maskedName,
+        customerName: maskCustomerName(c.claimedBy?.name),
         claimedAt: c.claimedAt,
         expiresAt: c.expiresAt,
-      };
-    });
+      }));
 
     res.json({
       summary: {

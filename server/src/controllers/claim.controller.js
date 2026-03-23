@@ -1,6 +1,7 @@
 import QRCode from '../models/QRCode.model.js';
 import Product from '../models/Product.model.js';
 import { buildCertificatePdf } from '../services/certificate.service.js';
+import { calculateWarrantyExpiry, maskCustomerName } from '../utils/warranty.js';
 
 export const getMyWarranties = async (req, res, next) => {
   try {
@@ -57,11 +58,7 @@ export const getClaimInfo = async (req, res, next) => {
       payload.claimedAt = code.claimedAt;
       payload.expiresAt = code.expiresAt;
       payload.claimedById = code.claimedBy?._id?.toString();
-      // Mask customer name for privacy — show first name + last initial only
-      const name = code.claimedBy?.name || '';
-      const parts = name.trim().split(' ');
-      payload.claimedByName =
-        parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0];
+      payload.claimedByName = maskCustomerName(code.claimedBy?.name);
     }
 
     res.json(payload);
@@ -94,9 +91,7 @@ export const activateClaim = async (req, res, next) => {
       return res.status(409).json({ message: 'This warranty has already been activated.' });
     }
 
-    // Compute expiry date
-    const expiresAt = new Date(code.claimedAt);
-    expiresAt.setMonth(expiresAt.getMonth() + code.product.warrantyDurationMonths);
+    const expiresAt = calculateWarrantyExpiry(code.claimedAt, code.product.warrantyDurationMonths);
     code.expiresAt = expiresAt;
     await code.save();
 
