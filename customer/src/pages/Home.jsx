@@ -41,7 +41,9 @@ export default function Home() {
             </div>
           </div>
           <button
+            type="button"
             onClick={logout}
+            aria-label="Sign out of customer account"
             className="text-slate-500 hover:text-white text-xs flex items-center gap-1 transition-colors"
           >
             <LogOut size={14} />
@@ -52,6 +54,7 @@ export default function Home() {
         {/* Scan CTA */}
         <Link
           to="/scan"
+          aria-label="Scan QR code to claim warranty"
           className="flex items-center justify-center gap-2 w-full bg-indigo-500 hover:bg-indigo-400 text-white font-semibold py-4 rounded-2xl mb-6 transition-colors shadow-lg shadow-indigo-500/20"
         >
           <ScanLine size={22} />
@@ -66,7 +69,9 @@ export default function Home() {
               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Recent Warranties</span>
             </div>
             <button
+              type="button"
               onClick={() => navigate('/warranties')}
+              aria-label="View all warranties"
               className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-0.5 transition-colors"
             >
               View all <ChevronRight size={13} />
@@ -79,7 +84,7 @@ export default function Home() {
             </div>
           ) : warranties.length === 0 ? (
             <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-center">
-              <p className="text-slate-400 text-sm">No warranties yet. Scan your first product!</p>
+              <p className="text-slate-400 text-sm">No warranties yet. Scan your first product.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -101,10 +106,12 @@ export default function Home() {
               ))}
               {warranties.length === 3 && (
                 <button
+                  type="button"
                   onClick={() => navigate('/warranties')}
+                  aria-label="View all registered warranties"
                   className="w-full text-xs text-indigo-400 hover:text-indigo-300 py-2 text-center transition-colors"
                 >
-                  View all warranties →
+                  View all warranties
                 </button>
               )}
             </div>
