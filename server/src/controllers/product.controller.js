@@ -3,6 +3,7 @@ import csvParser from 'csv-parser';
 import cloudinary from '../config/cloudinary.js';
 import Product from '../models/Product.model.js';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
+import { parseProductImportRow } from '../utils/productImport.js';
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -104,19 +105,15 @@ export const importProducts = async (req, res, next) => {
       Readable.from(req.file.buffer)
         .pipe(csvParser())
         .on('data', (row) => {
-          const months = Number(row.warranty_duration_months);
+          const parsed = parseProductImportRow(row);
 
-          if (!row.name || !row.model_number || !row.category || !months) {
-            errors.push(`Skipped row — missing required fields: ${JSON.stringify(row)}`);
+          if (parsed.error) {
+            errors.push(`Skipped row - ${parsed.error}: ${JSON.stringify(row)}`);
             return;
           }
 
           rows.push({
-            name: row.name.trim(),
-            modelNumber: row.model_number.trim(),
-            category: row.category.trim(),
-            specifications: row.specifications?.trim() || '',
-            warrantyDurationMonths: months,
+            ...parsed.product,
             manufacturer: req.user._id,
           });
         })
