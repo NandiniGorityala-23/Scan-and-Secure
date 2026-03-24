@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Upload, Camera, X, ScanLine, FileImage, AlertCircle } from 'lucide-react';
 import jsQR from 'jsqr';
 
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
 // Extract UUID from a claim URL or return the raw value if it's already a UUID
 function extractUUID(decoded) {
   try {
@@ -13,7 +15,7 @@ function extractUUID(decoded) {
       return parts[claimIndex + 1];
     }
   } catch {
-    // Not a URL — treat the whole decoded string as the UUID
+    // Not a URL; treat the whole decoded string as the UUID.
     return decoded.trim();
   }
   return null;
@@ -60,6 +62,10 @@ export default function Scanner() {
       setError('Please upload an image file.');
       return;
     }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError('Image is too large. Please upload a file under 8 MB.');
+      return;
+    }
     setError('');
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -82,6 +88,7 @@ export default function Scanner() {
   const onDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
+    if (!e.dataTransfer.files.length) return;
     processFile(e.dataTransfer.files[0]);
   };
 
@@ -99,7 +106,7 @@ export default function Scanner() {
       }
       scanFrame();
     } catch {
-      setError('Camera access denied. Use file upload instead.');
+      setError('Camera access is unavailable. Use file upload instead.');
       setMode('upload');
     }
   };
@@ -197,7 +204,7 @@ export default function Scanner() {
             <Upload size={32} className="mx-auto text-slate-400 mb-3" />
             <p className="text-white font-medium">Drop a QR code image here</p>
             <p className="text-slate-400 text-sm mt-1">or click to browse your files</p>
-            <p className="text-slate-500 text-xs mt-3">PNG, JPG, GIF accepted</p>
+            <p className="text-slate-500 text-xs mt-3">PNG, JPG, or GIF under 8 MB</p>
           </div>
         )}
 
