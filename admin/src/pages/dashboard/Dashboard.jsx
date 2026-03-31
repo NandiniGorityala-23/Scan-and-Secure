@@ -21,7 +21,7 @@ function StatCard({ icon: Icon, label, value, sub, color }) {
       <div className={`size-10 rounded-xl flex items-center justify-center mb-4 ${color}`}>
         <Icon size={20} className="text-white" />
       </div>
-      <p className="text-2xl font-bold text-slate-900">{value ?? '—'}</p>
+      <p className="text-2xl font-bold text-slate-900">{value ?? '-'}</p>
       <p className="text-sm text-slate-500 mt-1">{label}</p>
       {sub && <p className="text-xs text-slate-400 mt-1">{sub}</p>}
     </div>
@@ -78,7 +78,7 @@ export default function Dashboard() {
     try {
       const { data: result } = await api.post('/admin/trigger-expiry');
       if (result.sent === 0) {
-        toast(result.message || 'No warranties to notify right now.', { icon: 'ℹ️' });
+        toast(result.message || 'No warranties to notify right now.', { icon: 'i' });
       } else {
         toast.success(`Sent ${result.sent} expiry reminder${result.sent !== 1 ? 's' : ''}!`);
       }
@@ -117,7 +117,7 @@ export default function Dashboard() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">
-            Welcome back, {user?.name?.split(' ')[0]} 👋
+            Welcome back, {user?.name?.split(' ')[0]}
           </h1>
           <p className="text-slate-500 mt-1 text-sm">
             Here's a live overview of your warranty operations.
@@ -129,11 +129,11 @@ export default function Dashboard() {
           className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shrink-0"
         >
           {triggering ? <Loader2 size={15} className="animate-spin" /> : <Bell size={15} />}
-          {triggering ? 'Sending…' : 'Send Expiry Alerts'}
+          {triggering ? 'Sending...' : 'Send Expiry Alerts'}
         </button>
       </div>
 
-      {/* ── Stat cards ──────────────────────────────────────────────────────── */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
         <StatCard icon={Package} label="Total Products (SKUs)" value={summary?.totalProducts} color="bg-indigo-500" />
         <StatCard icon={QrCode} label="QR Codes Generated" value={summary?.totalCodes}
@@ -143,16 +143,16 @@ export default function Dashboard() {
         <StatCard icon={Clock} label="Codes Unclaimed" value={summary?.totalUnclaimed} color="bg-amber-500" />
       </div>
 
-      {/* ── Charts row ──────────────────────────────────────────────────────── */}
+      {/* Charts row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
-        {/* Claims over time — spans 2 cols */}
+        {/* Claims over time */}
         <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <TrendingUp size={16} className="text-indigo-500" />
               <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
-                Claims — Last {days} Days
+                Claims - Last {days} Days
               </h2>
             </div>
             <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
@@ -197,7 +197,7 @@ export default function Dashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Claims by category — pie */}
+        {/* Claims by category */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <SectionHeader icon={Layers} title="Claims by Category" />
           {claimsByCategory?.length > 0 ? (
@@ -231,7 +231,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Product claim rates bar chart ────────────────────────────────────── */}
+      {/* Product claim rates bar chart */}
       {productClaimRates?.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
           <SectionHeader icon={Package} title="Claim Rate by Product (Top 8)" />
@@ -250,7 +250,7 @@ export default function Dashboard() {
                 axisLine={false}
                 tickLine={false}
                 width={140}
-                tickFormatter={(v) => v.length > 20 ? v.slice(0, 20) + '…' : v}
+                tickFormatter={(v) => v.length > 20 ? `${v.slice(0, 20)}...` : v}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="rate" name="Claim rate %" radius={[0, 4, 4, 0]} barSize={14}>
@@ -263,7 +263,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Recent claims table ──────────────────────────────────────────────── */}
+      {/* Recent claims table */}
       {recentClaims?.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100">
@@ -313,7 +313,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Empty state — no data yet */}
+      {/* Empty state */}
       {!recentClaims?.length && !claimsByCategory?.length && (
         <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6">
           <p className="text-sm font-semibold text-indigo-800 mb-1">Getting started</p>
