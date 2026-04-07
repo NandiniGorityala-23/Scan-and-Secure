@@ -1,7 +1,7 @@
 import Product from '../models/Product.model.js';
 import QRCode from '../models/QRCode.model.js';
 import Batch from '../models/Batch.model.js';
-import { sendExpiryReminder } from '../services/email.service.js';
+import { sendPendingExpiryReminders } from '../jobs/expiryNotifier.job.js';
 
 export const getClaims = async (req, res, next) => {
   try {
@@ -15,18 +15,29 @@ export const getClaims = async (req, res, next) => {
 
     const filter = { product: { $in: productIds }, status: 'claimed' };
 
-    const skip = (Number(page) - 1) * Number(limit);
+    if (status === 'active') {
+      filter.expiresAt = { $gt: in30Days };
+    } else if (status === 'expiring') {
+      filter.expiresAt = { $gte: now, $lte: in30Days };
+    } else if (status === 'expired') {
+      filter.expiresAt = { $lt: now };
+    }
+
+    const safePage = Math.max(Number(page) || 1, 1);
+    const safeLimit = Math.min(Math.max(Number(limit) || 15, 1), 100);
+    const skip = (safePage - 1) * safeLimit;
+
     const [rawClaims, total] = await Promise.all([
       QRCode.find(filter)
         .sort({ claimedAt: -1 })
         .skip(skip)
-        .limit(Number(limit))
+        .limit(safeLimit)
         .populate('product', 'name modelNumber category warrantyDurationMonths')
         .populate('claimedBy', 'name email'),
       QRCode.countDocuments(filter),
     ]);
 
-    let claims = rawClaims.map((c) => ({
+    const claims = rawClaims.map((c) => ({
       productName: c.product?.name,
       modelNumber: c.product?.modelNumber,
       category: c.product?.category,
@@ -37,20 +48,11 @@ export const getClaims = async (req, res, next) => {
       expiresAt: c.expiresAt,
     }));
 
-    // Filter by expiry status client-side after fetch
-    if (status === 'active') {
-      claims = claims.filter((c) => c.expiresAt && new Date(c.expiresAt) > in30Days);
-    } else if (status === 'expiring') {
-      claims = claims.filter((c) => c.expiresAt && new Date(c.expiresAt) >= now && new Date(c.expiresAt) <= in30Days);
-    } else if (status === 'expired') {
-      claims = claims.filter((c) => c.expiresAt && new Date(c.expiresAt) < now);
-    }
-
     res.json({
       claims,
       total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+      page: safePage,
+      pages: Math.ceil(total / safeLimit),
     });
   } catch (err) {
     next(err);
@@ -64,7 +66,6 @@ export const getAnalytics = async (req, res, next) => {
     const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id name category warrantyDurationMonths');
     const productIds = adminProducts.map((p) => p._id);
 
-    // ── Core counts ───────────────────────────────────────────────────────────
     const [totalCodes, totalClaimed, totalUnclaimed, totalBatches] = await Promise.all([
       QRCode.countDocuments({ product: { $in: productIds } }),
       QRCode.countDocuments({ product: { $in: productIds }, status: 'claimed' }),
@@ -72,8 +73,6 @@ export const getAnalytics = async (req, res, next) => {
       Batch.countDocuments({ product: { $in: productIds } }),
     ]);
 
-    // ── Claims over selected period (daily buckets) ────────────────────────────
-    // Start = beginning of day, (days-1) days ago. End = end of today.
     const periodStart = new Date();
     periodStart.setDate(periodStart.getDate() - (days - 1));
     periodStart.setHours(0, 0, 0, 0);
@@ -100,19 +99,17 @@ export const getAnalytics = async (req, res, next) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // Fill missing days with 0 — keys in IST local date strings
     const dayMap = {};
     claimsByDay.forEach((d) => { dayMap[d._id] = d.count; });
     const claimsTimeline = [];
+
     for (let i = 0; i < days; i++) {
       const d = new Date(periodStart);
       d.setDate(periodStart.getDate() + i);
-      // Format as YYYY-MM-DD in IST
       const key = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
       claimsTimeline.push({ date: key, claims: dayMap[key] || 0 });
     }
 
-    // ── Claims by category ────────────────────────────────────────────────────
     const claimsByCategory = await QRCode.aggregate([
       { $match: { product: { $in: productIds }, status: 'claimed' } },
       { $lookup: { from: 'products', localField: 'product', foreignField: '_id', as: 'product' } },
@@ -121,7 +118,6 @@ export const getAnalytics = async (req, res, next) => {
       { $sort: { claimed: -1 } },
     ]);
 
-    // ── Per-product claim rate ─────────────────────────────────────────────────
     const perProduct = await QRCode.aggregate([
       { $match: { product: { $in: productIds } } },
       {
@@ -146,7 +142,6 @@ export const getAnalytics = async (req, res, next) => {
       .sort((a, b) => b.claimed - a.claimed)
       .slice(0, 8);
 
-    // ── Recent claims ─────────────────────────────────────────────────────────
     const recentClaims = await QRCode.find({
       product: { $in: productIds },
       status: 'claimed',
@@ -160,8 +155,9 @@ export const getAnalytics = async (req, res, next) => {
       const name = c.claimedBy?.name || '';
       const parts = name.trim().split(' ');
       const maskedName = parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0];
+
       return {
-        uuid: c.uuid.slice(0, 8) + '…',
+        uuid: `${c.uuid.slice(0, 8)}...`,
         productName: c.product?.name,
         modelNumber: c.product?.modelNumber,
         category: c.product?.category,
@@ -192,45 +188,17 @@ export const getAnalytics = async (req, res, next) => {
 
 export const triggerExpiryNotifications = async (req, res, next) => {
   try {
-    const now = new Date();
-    const in30Days = new Date();
-    in30Days.setDate(now.getDate() + 30);
+    const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id');
+    const productIds = adminProducts.map((p) => p._id);
+    const results = await sendPendingExpiryReminders({ productIds });
 
-    const expiring = await QRCode.find({
-      status: 'claimed',
-      expiresAt: { $gte: now, $lte: in30Days },
-      notifiedAt: null,
-    })
-      .populate('product', 'name modelNumber')
-      .populate('claimedBy', 'name email');
-
-    if (expiring.length === 0) {
+    if (results.length === 0) {
       return res.json({ sent: 0, message: 'No unnotified warranties expiring within 30 days.' });
     }
 
-    let sent = 0;
-    const results = [];
+    const sent = results.filter((result) => result.status === 'sent').length;
 
-    for (const code of expiring) {
-      if (!code.claimedBy?.email) continue;
-      try {
-        await sendExpiryReminder({
-          to: code.claimedBy.email,
-          customerName: code.claimedBy.name,
-          productName: code.product.name,
-          modelNumber: code.product.modelNumber,
-          expiresAt: code.expiresAt,
-        });
-        code.notifiedAt = new Date();
-        await code.save();
-        sent++;
-        results.push({ email: code.claimedBy.email, product: code.product.name, status: 'sent' });
-      } catch (err) {
-        results.push({ email: code.claimedBy.email, product: code.product.name, status: 'failed', error: err.message });
-      }
-    }
-
-    res.json({ sent, total: expiring.length, results });
+    res.json({ sent, total: results.length, results });
   } catch (err) {
     next(err);
   }
