@@ -34,6 +34,8 @@ function BottomNav() {
             <NavLink
               key={to}
               to={to}
+              aria-label={label}
+              aria-current={active ? 'page' : undefined}
               className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-xl transition-colors"
             >
               <Icon
