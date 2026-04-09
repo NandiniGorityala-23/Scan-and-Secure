@@ -1,7 +1,7 @@
 import Product from '../models/Product.model.js';
 import QRCode from '../models/QRCode.model.js';
 import Batch from '../models/Batch.model.js';
-import { sendPendingExpiryReminders } from '../jobs/expiryNotifier.job.js';
+import { listPendingExpiryReminders, sendPendingExpiryReminders } from '../jobs/expiryNotifier.job.js';
 import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
 import { maskCustomerName } from '../utils/warranty.js';
 
@@ -191,6 +191,26 @@ export const triggerExpiryNotifications = async (req, res, next) => {
     const sent = results.filter((result) => result.status === 'sent').length;
 
     res.json({ sent, total: results.length, results });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const previewExpiryNotifications = async (req, res, next) => {
+  try {
+    const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id');
+    const productIds = adminProducts.map((p) => p._id);
+    const expiring = await listPendingExpiryReminders({ productIds });
+
+    res.json({
+      total: expiring.length,
+      reminders: expiring.map((code) => ({
+        email: code.claimedBy?.email,
+        product: code.product?.name,
+        modelNumber: code.product?.modelNumber,
+        expiresAt: code.expiresAt,
+      })),
+    });
   } catch (err) {
     next(err);
   }

@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import mongoose from 'mongoose';
 
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
@@ -13,6 +14,7 @@ import errorHandler from './middleware/error.middleware.js';
 import requestContext from './middleware/requestContext.middleware.js';
 import { startExpiryNotifier } from './jobs/expiryNotifier.job.js';
 import { getEnv, validateEnv } from './config/env.js';
+import { getMongoState } from './utils/dbState.js';
 
 const app = express();
 const startedAt = new Date().toISOString();
@@ -35,6 +37,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     service: 'omniwarranty-server',
     startedAt,
+    database: getMongoState(mongoose.connection.readyState),
     requestId: req.requestId,
   });
 });

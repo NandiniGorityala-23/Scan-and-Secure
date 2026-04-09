@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
+    "test": "node --test",
     "seed": "node src/seed.js",
     "add-products": "node src/addProducts.js"
   },

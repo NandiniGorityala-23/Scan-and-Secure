@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import QRCode from '../models/QRCode.model.js';
 import { sendExpiryReminder } from '../services/email.service.js';
 
-export const sendPendingExpiryReminders = async ({ productIds } = {}) => {
+const buildExpiryReminderFilter = ({ productIds } = {}) => {
   const now = new Date();
   const in30Days = new Date();
   in30Days.setDate(now.getDate() + 30);
@@ -17,9 +17,16 @@ export const sendPendingExpiryReminders = async ({ productIds } = {}) => {
     filter.product = { $in: productIds };
   }
 
-  const expiring = await QRCode.find(filter)
+  return filter;
+};
+
+export const listPendingExpiryReminders = ({ productIds } = {}) =>
+  QRCode.find(buildExpiryReminderFilter({ productIds }))
     .populate('product', 'name modelNumber')
     .populate('claimedBy', 'name email');
+
+export const sendPendingExpiryReminders = async ({ productIds } = {}) => {
+  const expiring = await listPendingExpiryReminders({ productIds });
 
   const results = [];
 
@@ -66,4 +73,3 @@ export const startExpiryNotifier = () => {
 
   console.log('[ExpiryNotifier] Scheduled - runs daily at 9:00 AM');
 };
-
