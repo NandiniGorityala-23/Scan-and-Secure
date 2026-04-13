@@ -6,6 +6,11 @@ import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { useImportProducts } from '../../hooks/useProducts';
 import { cn } from '../../lib/utils';
+import {
+  CSV_UPLOAD_MAX_BYTES,
+  CSV_UPLOAD_MAX_LABEL,
+  getCSVRejectionMessage,
+} from '../../lib/uploadValidation';
 
 const TEMPLATE_CSV =
   'name,model_number,category,specifications,warranty_duration_months\n' +
@@ -25,13 +30,19 @@ export default function ImportCSVModal({ open, onClose }) {
   const [file, setFile] = useState(null);
   const { mutate, isPending } = useImportProducts();
 
-  const onDrop = useCallback((accepted) => {
+  const onDrop = useCallback((accepted, fileRejections) => {
+    if (fileRejections.length > 0) {
+      toast.error(getCSVRejectionMessage(fileRejections));
+      return;
+    }
+
     if (accepted[0]) setFile(accepted[0]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'text/csv': ['.csv'] },
+    maxSize: CSV_UPLOAD_MAX_BYTES,
     multiple: false,
   });
 
@@ -88,7 +99,9 @@ export default function ImportCSVModal({ open, onClose }) {
               <p className="text-sm font-medium text-slate-700">
                 Drag & drop a CSV file here
               </p>
-              <p className="text-xs text-slate-400 mt-1">or click to browse</p>
+              <p className="text-xs text-slate-400 mt-1">
+                or click to browse, up to {CSV_UPLOAD_MAX_LABEL}
+              </p>
             </>
           )}
         </div>

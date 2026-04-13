@@ -5,18 +5,29 @@ import toast from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 import { uploadCSVGetPDF } from '../../hooks/useQRCodes';
 import { cn } from '../../lib/utils';
+import {
+  CSV_UPLOAD_MAX_BYTES,
+  CSV_UPLOAD_MAX_LABEL,
+  getCSVRejectionMessage,
+} from '../../lib/uploadValidation';
 
 export default function UploadCSVPanel() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const onDrop = useCallback((accepted) => {
+  const onDrop = useCallback((accepted, fileRejections) => {
+    if (fileRejections.length > 0) {
+      toast.error(getCSVRejectionMessage(fileRejections));
+      return;
+    }
+
     if (accepted[0]) setFile(accepted[0]);
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'text/csv': ['.csv'] },
+    maxSize: CSV_UPLOAD_MAX_BYTES,
     multiple: false,
   });
 
@@ -67,7 +78,9 @@ export default function UploadCSVPanel() {
             <p className="text-sm font-medium text-slate-700">
               Drag & drop your QR codes CSV
             </p>
-            <p className="text-xs text-slate-400 mt-1">or click to browse</p>
+            <p className="text-xs text-slate-400 mt-1">
+              or click to browse, up to {CSV_UPLOAD_MAX_LABEL}
+            </p>
           </>
         )}
       </div>
