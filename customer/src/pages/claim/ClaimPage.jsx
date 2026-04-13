@@ -34,12 +34,14 @@ function ImageCarousel({ images }) {
       {images.length > 1 && (
         <>
           <button
+            aria-label="Previous product image"
             onClick={() => setIdx((i) => (i - 1 + images.length) % images.length)}
             className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
           <button
+            aria-label="Next product image"
             onClick={() => setIdx((i) => (i + 1) % images.length)}
             className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
           >
@@ -49,6 +51,7 @@ function ImageCarousel({ images }) {
             {images.map((_, i) => (
               <button
                 key={i}
+                aria-label={`Show product image ${i + 1}`}
                 onClick={() => setIdx(i)}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${i === idx ? 'bg-white' : 'bg-white/40'}`}
               />
@@ -175,7 +178,7 @@ export default function ClaimPage() {
           </div>
         )}
 
-        {/* Already claimed — by current user */}
+        {/* Already claimed by current user */}
         {!loading && !error && claimData?.status === 'claimed' && !activated && token && claimData.claimedById === (user?.id || user?._id) && (
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-linear-to-r from-emerald-600 to-teal-600 px-8 py-6">
@@ -225,7 +228,7 @@ export default function ClaimPage() {
           </div>
         )}
 
-        {/* Already claimed by someone else — possible counterfeit */}
+        {/* Already claimed by someone else */}
         {!loading && !error && claimData?.status === 'claimed' && !activated && !(token && claimData.claimedById === (user?.id || user?._id)) && (
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-linear-to-b from-red-600 to-red-700 px-8 py-8 text-center">
@@ -259,7 +262,7 @@ export default function ClaimPage() {
           </div>
         )}
 
-        {/* Unclaimed — ready to activate */}
+        {/* Unclaimed and ready to activate */}
         {!loading && !error && claimData?.status === 'unclaimed' && !activated && (
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-linear-to-r from-indigo-600 to-violet-600 px-8 py-6">
@@ -327,7 +330,7 @@ export default function ClaimPage() {
           </div>
         )}
 
-        {/* Success state — after activation */}
+        {/* Success state after activation */}
         {activated && activatedData && (
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
             <div className="bg-linear-to-r from-emerald-600 to-teal-600 px-8 py-8 text-center">
@@ -385,7 +388,7 @@ export default function ClaimPage() {
 
         {/* Branding footer */}
         <p className="text-center text-white/30 text-xs mt-6">
-          OmniWarranty — Fraud-proof digital warranty management
+          OmniWarranty - Fraud-proof digital warranty management
         </p>
       </div>
     </div>
