@@ -47,7 +47,7 @@ export default function Register() {
                 <input
                   name={field}
                   type={field === 'password' ? 'password' : field === 'email' ? 'email' : 'text'}
-                  placeholder={field === 'name' ? 'Your name' : field === 'email' ? 'you@email.com' : '••••••••'}
+                  placeholder={field === 'name' ? 'Your name' : field === 'email' ? 'you@email.com' : '********'}
                   value={form[field]}
                   onChange={handle}
                   minLength={field === 'password' ? 6 : undefined}

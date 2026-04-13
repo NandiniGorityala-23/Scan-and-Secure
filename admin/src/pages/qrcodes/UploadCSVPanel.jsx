@@ -41,7 +41,7 @@ export default function UploadCSVPanel() {
           <FileDown size={18} className="text-violet-600" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-900">CSV → Printable PDF</p>
+          <p className="text-sm font-semibold text-slate-900">CSV to printable PDF</p>
           <p className="text-xs text-slate-500">
             Upload an exported QR codes CSV to get a print-ready label sheet
           </p>
@@ -97,7 +97,7 @@ export default function UploadCSVPanel() {
       </Button>
 
       <p className="text-xs text-slate-400 text-center mt-2">
-        PDF is generated as a 3×3 grid (9 QR codes per A4 page)
+        PDF is generated as a 3 x 3 grid (9 QR codes per A4 page)
       </p>
     </div>
   );
