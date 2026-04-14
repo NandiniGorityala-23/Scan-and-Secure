@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ShieldCheck, Download, AlertTriangle, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { API_BASE_URL } from '../lib/config';
 import { daysLeft, formatWarrantyDate, warrantyStatus } from '../lib/warranty';
@@ -32,6 +33,7 @@ export default function Warranties() {
   const navigate = useNavigate();
   const [warranties, setWarranties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingUuid, setDownloadingUuid] = useState(null);
 
   useEffect(() => {
     api.get('/claim/my/warranties')
@@ -40,18 +42,27 @@ export default function Warranties() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleDownload = (uuid) => {
+  const handleDownload = async (uuid) => {
     const token = localStorage.getItem('ow_customer_token');
     const url = `${API_BASE_URL}/claim/${uuid}/certificate`;
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.blob())
-      .then((blob) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `warranty-${uuid.slice(0, 8)}.pdf`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      });
+    setDownloadingUuid(uuid);
+
+    try {
+      const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error('Certificate download failed');
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `warranty-${uuid.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      toast.error(err.message || 'Certificate download failed');
+    } finally {
+      setDownloadingUuid(null);
+    }
   };
 
   return (
@@ -61,6 +72,8 @@ export default function Warranties() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <button
+            type="button"
+            aria-label="Back to customer home"
             onClick={() => navigate('/')}
             className="size-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
           >
@@ -126,11 +139,14 @@ export default function Warranties() {
                     )}
 
                     <button
+                      type="button"
                       onClick={() => handleDownload(uuid)}
-                      className="flex items-center justify-center gap-2 w-full text-sm font-semibold text-white bg-indigo-500/30 hover:bg-indigo-500/50 border border-indigo-400/30 py-2.5 rounded-xl transition-colors"
+                      disabled={downloadingUuid === uuid}
+                      aria-label={`Download certificate for ${product.name}`}
+                      className="flex items-center justify-center gap-2 w-full text-sm font-semibold text-white bg-indigo-500/30 hover:bg-indigo-500/50 border border-indigo-400/30 py-2.5 rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <Download size={15} />
-                      Download Certificate
+                      {downloadingUuid === uuid ? 'Preparing certificate...' : 'Download Certificate'}
                     </button>
                   </div>
                 </div>
