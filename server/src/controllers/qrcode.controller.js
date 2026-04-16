@@ -11,7 +11,7 @@ export const generate = async (req, res, next) => {
     const { productId, quantity, batchName } = req.body;
 
     if (!productId || !quantity || quantity < 1 || quantity > 10000) {
-      return res.status(400).json({ message: 'productId and quantity (1–10,000) required' });
+      return res.status(400).json({ message: 'productId and quantity (1-10,000) required' });
     }
     if (!batchName || !batchName.trim()) {
       return res.status(400).json({ message: 'Batch name is required' });
@@ -68,14 +68,28 @@ export const getStats = async (req, res, next) => {
 
 export const getBatches = async (req, res, next) => {
   try {
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const skip = (page - 1) * limit;
     const adminProducts = await Product.find({ manufacturer: req.user._id }).select('_id');
     const productIds = adminProducts.map((p) => p._id);
+    const filter = { product: { $in: productIds } };
 
-    const batches = await Batch.find({ product: { $in: productIds } })
-      .populate('product', 'name modelNumber category images')
-      .sort({ createdAt: -1 });
+    const [batches, total] = await Promise.all([
+      Batch.find(filter)
+        .populate('product', 'name modelNumber category images')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Batch.countDocuments(filter),
+    ]);
 
-    res.json({ batches });
+    res.json({
+      batches,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
   } catch (err) {
     next(err);
   }
